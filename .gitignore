@@ -1,5 +1,3 @@
-**/covers/*
-**/uploaded/documents/*
-
-
+**/api_key.json
+**/aimodel
 **/database.sqlite

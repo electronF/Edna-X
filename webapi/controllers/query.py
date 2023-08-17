@@ -38,12 +38,12 @@ class QueryController:
 
             # Serialize response and return it
             return {
-                **QuerySchema(many=True).dump(queries), 
+                'data': QuerySchema(many=True).dump(queries), 
                 'sucess': True,
-                'code':201
+                'code':200
                 }
         except Exception as error:
-            connexion_app.logger.error(error)
+            connexion_app.logger.error('controllers',str(error))
             return {
                 'success':False, 
                 'message':f'something happens wrong on server {str(error)}', 
@@ -70,7 +70,7 @@ class QueryController:
             return {
                 **QuerySchema(many=True).dump(queries), 
                 'success': True, 
-                'code':201
+                'code':200
             }
         except Exception as error:
             connexion_app.logger.error(error)
@@ -93,8 +93,10 @@ class QueryController:
                 500 and success state and error message if failed.
         """
         # Build the initial query
+        
         query = (
-            Query.query.filter(Query.id == query_id)
+            database.session.query(Query)
+            .filter(Query.id == query_id)
             .one_or_none()
         )
         try:
@@ -104,7 +106,7 @@ class QueryController:
                 return {
                     **QuerySchema().dump(query), 
                     'success':True, 
-                    'code': 201
+                    'code': 200
                 }
             # Otherwise, nope, didn't find that query
             else:
@@ -160,10 +162,10 @@ class QueryController:
             }
         except Exception as error:
             # Otherwise, nope, query ists already
-            connexion_app.logger.error(error)
+            connexion_app.logger.error('controller', str(error))
             return {
                 'success': False,
-                'message': 'Something happens wrong on server', 
+                'message': f'Something happens wrong on server {error}', 
                 'code': 500
             }
 
@@ -180,10 +182,12 @@ class QueryController:
             (Dict | None): code 201 and the update query object and the success state on success,
                 or code 404 or code 500 and the success state and the error message if .
         """
-        # Get the query requested 
-        existing_query = Query.query.filter(
-            Query.id == query_id
-        ).one_or_none()
+        # Get the query requested
+        existing_query = (
+            database.session.query(Query)
+            .filter(Query.id == query_id)
+            .one_or_none()
+        )
         
         try:
             # Update the query if it exists?
@@ -192,13 +196,13 @@ class QueryController:
                 update = schema.load(query, session=database.session)
 
                 # Set the id to the query to update
-                update.id = query.id
+                update.id = query['id']
 
                 # merge the new object with the old one and save to the database
                 database.session.merge(update)
                 database.session.commit()
 
-                return {**schema.dump(update), 'success': True, 'code':201}
+                return {**schema.dump(update), 'success': True, 'code':200}
 
             # Otherwise, nope, didn't find that query
             else:
@@ -228,7 +232,11 @@ class QueryController:
                     Code 404 or 500 and success state and error message .
         """
         # Get the query requested
-        query = Query.query.filter(Query.id == query_id).one_or_none()
+        query = (
+            database.session.query(Query)
+            .filter(Query.id == query_id)
+            .one_or_none()
+        )
 
         try:
             # Delete the query if its exists
@@ -238,7 +246,7 @@ class QueryController:
                 return {
                         'success': True,
                         'message':f"Query with Id {query_id} has been deleted",
-                        'code': 201
+                        'code': 200
                     } 
             else:
                 return {

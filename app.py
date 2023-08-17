@@ -1,7 +1,7 @@
 #built-in module
 import os
 import json
-import datetime
+from datetime import datetime
 
 # 3rd party moudles
 from flask import (
@@ -49,7 +49,7 @@ def get_all_queries():
         code = response.pop('code')
         return make_response(jsonify(response), code)
     except Exception as error:
-        connex_app.logger('info', error)
+        connex_app.logger('app', error)
         return make_response (
             jsonify({
                 'success': False,
@@ -59,46 +59,60 @@ def get_all_queries():
         )
 
 
-# Create a URL route in our application for "/api/document/"
-@connex_app.route("/api/get/<str:query>", methods=['GET'])
-def get_one_query(query:str):
+# Create a URL route in our application for "/api/bot/"
+@connex_app.route("/api/bot/", methods=['POST'])
+def get_one_query():
     """
         This function just responds to the URL
-        localhost:5000/api/document/<str:query>
+        localhost:5000/api/bot/<str:query>
         Args:
             query(str): the query to get answer for.
         Returns:
             (str): The response of the query.
     """
     try:
-        query_obj = json.loads(query)
+        query = request.form
         if(not (None in [
                 query.get('query', None), 
                 query.get('username', None),
                 query.get('user_id', None)
                 ])
             ):
+            
+            #Remove the Z included by iso 8601 
+            sended_at = query.get('sended_at', None)
+            if sended_at != None:
+                pos = sended_at.find('Z')
+                if pos > 0:
+                    list_sended_at = list(sended_at)
+                    list_sended_at.remove('Z')
+                    sended_at = "".join(list_sended_at)
+                    
             query_dto = QueryDTO(
                 username = query.get('username'),
                 query = query.get('query'),
                 email = query.get('email', None),
                 user_id = query.get('user_id'),
-                sended_at = query.get('sended_at', None)
+                sended_at = (datetime.fromisoformat(sended_at) if sended_at != None else None)
             )
+            
             first_response = QueryController.create(query_dto)
             code = first_response.pop('code')
             success = first_response.pop('success', False)
             if success == True:
                 #Get generated response 
                 bot_response = text_generator.query(query.get('query'))
-                first_response = {
-                    **first_response,
-                    'query_response':bot_response, 
-                    'replyed_at': datetime.datetime.now()
-                }
-                second_response = QueryController.update(first_response['id'], first_response)
-                code = second_response.pop('code')
-                return make_response(jsonify(second_response), code)
+                if bot_response['success'] == True:
+                    first_response = {
+                        **first_response,
+                        'query_response':bot_response, 
+                        'replyed_at': datetime.utcnow().isoformat()
+                    }
+                    second_response = QueryController.update(first_response['id'], first_response)
+                    code = second_response.pop('code')
+                    return make_response(jsonify(second_response), code)
+                else:
+                    return make_response(jsonify({'success':False, 'message':bot_response['message']}), bot_response['code'])
             return make_response(jsonify({**first_response, 'success':success}), code)
     except Exception as error:
         connex_app.logger('info', error)

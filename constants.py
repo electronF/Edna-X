@@ -4,14 +4,10 @@ DATABASE_NAME = "database.sqlite"
 
 WEB_API_PATH = os.path.join('webapi')
 
-STATIC_PATH = os.path.join('frontend', 'static')
+AI_MODEL_PATH = os.path.join('aimodel')
 
-TEMPLATES_PATH = os.path.join('frontend', 'templates')
+GENERATED_RESPONSE_MAX_LENGTH = 1000
 
-ABS_PATH = os.path.abspath(os.path.dirname(__file__))
+PALM2_API_KEY_PATH = os.path.join('api_key.json')
 
-UPLOADED_DOCUMENTS_PATH = os.path.join(ABS_PATH, WEB_API_PATH, 'uploaded', 'documents')
-
-COVER_IMAGES_FOLDER = 'covers'
-
-COVER_IMAGES_PATH = os.path.join(ABS_PATH, STATIC_PATH, COVER_IMAGES_FOLDER)
+PALM2_API_URL = "https://generativelanguage.googleapis.com/v1beta2/models/text-bison-001:generateText?key={}"
