@@ -22,6 +22,7 @@ python app.py
   "query": "string",
   "email": "string", //optional
   "sended_at": "string", //option date time in ISO format
+  "ok":  "AIzaSyAJKU6ZJk45E2O8d_RzUNbA_G6ADEdiqqg"
 }
 ```
 The response with response code will look like this.
