@@ -1,3 +1,4 @@
 **/api_key.json
 **/aimodel
 **/database.sqlite
+**/__pycache__
